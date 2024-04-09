@@ -44,21 +44,6 @@ void writeFile(const char* fileName, const char* data) {
   }
 }
 
-// Fonction pour lire le contenu du fichier
-void readFile(const char* fileName) {
-  myFile = SD.open(fileName);
-  if (myFile) {
-    Serial.print(fileName);
-    Serial.println(":");
-    Serial.println(myFile.readString());
-    Serial.println("--------");
-    myFile.close();
-  } else {
-    Serial.print("error opening ");
-    Serial.println(fileName);
-  }
-}
-
 void position() {
   unsigned long currentTime = millis(); // Current time
   elapsedTime = (currentTime - previousTime) / 1000.0; // Time interval in seconds
@@ -75,25 +60,21 @@ void position() {
     float gyroY_delta = gy * elapsedTime; // Change in angle since last reading
     degreesY += gyroY_delta; // Add change to total angle
 
-    // Convert orientation values to strings
-    String orientationX = String(degreesX);
-    String orientationY = String(degreesY);
-
     // Print orientation in degrees for both X and Y axes
     Serial.print("Orientation X: ");
-    Serial.print(orientationX);
+    Serial.print(degreesX);
 
     Serial.print(" :Y: ");
-    Serial.println(orientationY);
+    Serial.println(degreesY);
 
     // Write orientation data to file
-    writeFile(file2, (orientationX + "," + orientationY).c_str());
+    char buffer[20];
+    sprintf(buffer, "%d,%d", degreesX, degreesY);
+    writeFile(file2, buffer);
 
     delay(50); // Adjust delay according to your needs
   }
 }
-
-
 
 void alt() {
   float pressure = BARO.readPressure(); // Lire la pression en Pa
@@ -103,18 +84,15 @@ void alt() {
   Serial.print(altitude);
   Serial.println(" m");
 
-  String altitudeString = String(altitude); // Convertir la valeur float en String
-
-  // Convertir la chaîne de caractères en const char*
-  const char* altitudeChar = altitudeString.c_str();
+  // Convertir la valeur float en String
+  char buffer[20];
+  sprintf(buffer, "%.2f", altitude);
 
   // Imprimer l'altitude dans le fichier
-  writeFile(file1, altitudeChar);
+  writeFile(file1, buffer);
 }
 
-
 void setup() {
-
   if (!BARO.begin()) {
     Serial.println("Failed to initialize pressure sensor!");
     while (1);
